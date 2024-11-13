@@ -1,8 +1,8 @@
 streamlit
 pandas
 matplotlib
-pmdarima
 Cython
 numpy
 scipy
+pmdarima
 streamlit_option_menu
