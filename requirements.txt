@@ -2,8 +2,8 @@ streamlit
 pandas
 matplotlib
 Cython
-numpy
+numpy==1.24.3
 statsmodels
 scipy
-pmdarima
+pmdarima==1.8.5
 streamlit_option_menu
