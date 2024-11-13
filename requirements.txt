@@ -2,4 +2,7 @@ streamlit
 pandas
 matplotlib
 pmdarima
+Cython
+numpy
+scipy
 streamlit_option_menu
