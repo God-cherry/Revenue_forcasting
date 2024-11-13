@@ -2,7 +2,7 @@ streamlit
 pandas
 matplotlib
 Cython
-numpy==1.21.4
+numpy
 statsmodels
 scipy
 pmdarima
