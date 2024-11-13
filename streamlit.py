@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-! pip install matplotlib
 import matplotlib.pyplot as plt
 from pmdarima import auto_arima
 from streamlit_option_menu import option_menu
