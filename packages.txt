@@ -1,2 +1,1 @@
 libgomp1
-python3.12-distutils
