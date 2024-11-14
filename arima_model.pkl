@@ -1,0 +1,45 @@
+import pandas as pd
+from pmdarima import auto_arima
+import pickle
+
+# Load and prepare the data
+data = pd.read_csv(r"C:\Users\charankumarmv\Downloads\dataset.csv")
+
+# Validate and clean the dataset
+if "Month" not in data.columns:
+    for col in data.columns:
+        if col.strip().lower() == "month":
+            data = data.rename(columns={col: "Month"})
+            break
+    else:
+        print("No 'Month' column found in the dataset. Please check the CSV file.")
+        exit()
+
+# Convert 'Month' to datetime format and set as index
+data["Month"] = pd.to_datetime(data["Month"])
+data.set_index("Month", inplace=True)
+
+# Clean the 'Revenue' column
+data[" Revenue "] = (
+    data[" Revenue "].replace({"\$": "", ",": ""}, regex=True).astype(float)
+)
+
+# Preprocess data
+data.index = data.index + pd.offsets.MonthEnd(-1)  # Adjust to month-end
+data = data[~data.index.duplicated(keep="first")]  # Remove duplicates
+data[" Revenue "] = data[" Revenue "].fillna(method="ffill")  # Fill missing values
+
+# Train the ARIMA model
+model = auto_arima(
+    data[" Revenue "],
+    seasonal=True,
+    m=12,
+    trace=False,
+    stepwise=True,
+)
+
+# Save the trained model to a pickle file
+with open("arima_model.pkl", "wb") as file:
+    pickle.dump(model, file)
+
+print("Model trained and saved successfully as arima_model.pkl.")
