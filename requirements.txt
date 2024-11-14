@@ -1,9 +1,9 @@
 matplotlib
-numpy==1.23.5
+numpy
 pandas
 scipy
 statsmodels
-setuptools==68.0.0
+setuptools
 urllib3
 Cython
 joblib
