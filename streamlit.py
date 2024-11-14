@@ -61,7 +61,7 @@ if "model" not in st.session_state:
             try:
                 st.session_state.model = joblib.load(model_filename)
                 st.success("Model loaded successfully!")
-            except (EOFError, joblib.externals.loky.process_executor._RemoteTraceback, pickle.UnpicklingError):
+            except EOFError:
                 st.error("Model file is corrupted. Please delete the file and retrain the model.")
                 os.remove(model_filename)
     else:
