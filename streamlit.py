@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pmdarima import auto_arima
 from streamlit_option_menu import option_menu
-import pickle
+import joblib
 import os
 
 # Apply a consistent plot style
@@ -17,14 +17,14 @@ st.write("#### Predict revenue trends for the next five years using ARIMA modeli
 with st.sidebar:
     selected_page = option_menu(
         menu_title="Navigation",
-        options=["Welcome", "Predicted Data", "Forecast Table", "Download Model"],
-        icons=["house", "graph-up-arrow", "table", "download"],
+        options=["Welcome", "Predicted Data", "Forecast Table"],
+        icons=["house", "graph-up-arrow", "table"],
         menu_icon="menu-app",
         default_index=0,
     )
 
 # Load and prepare the data
-data = pd.read_csv(r"C:\Users\charankumarmv\Downloads\dataset.csv")
+data = pd.read_csv("dataset.csv")
 
 # Validate and clean the dataset
 if "Month" not in data.columns:
@@ -50,33 +50,36 @@ data.index = data.index + pd.offsets.MonthEnd(-1)  # Adjust to month-end
 data = data[~data.index.duplicated(keep="first")]  # Remove duplicates
 data[" Revenue "] = data[" Revenue "].fillna(method="ffill")  # Fill missing values
 
-# Forecast parameters and model training (cached to run only once)
+# Forecast parameters
 n_periods = 60  # 5 years = 60 months
+model_filename = "arima_model.pkl"
 
-# Train and store the model in a pickle file
+# Load or train the model
 if "model" not in st.session_state:
-    with st.spinner("Training ARIMA model..."):
-        st.session_state.model = auto_arima(
-            data[" Revenue "],
-            seasonal=True,
-            m=12,
-            trace=False,
-            stepwise=True,
-        )
-
-        # Save the trained model to a pickle file
-        model_filename = "arima_model.pkl"
-        with open(model_filename, "wb") as model_file:
-            pickle.dump(st.session_state.model, model_file)
-
-    st.success("Model trained and saved successfully!")
+    if os.path.exists(model_filename):
+        with st.spinner("Loading ARIMA model..."):
+            try:
+                st.session_state.model = joblib.load(model_filename)
+                st.success("Model loaded successfully!")
+            except EOFError:
+                st.error("Model file is corrupted. Please delete the file and retrain the model.")
+                os.remove(model_filename)
+    else:
+        with st.spinner("Training ARIMA model..."):
+            st.session_state.model = auto_arima(
+                data[" Revenue "],
+                seasonal=True,
+                m=12,
+                trace=False,
+                stepwise=True,
+            )
+            joblib.dump(st.session_state.model, model_filename)
+        st.success("Model trained and saved successfully!")
 
 # Forecasting
 model = st.session_state.model
 forecast = model.predict(n_periods=n_periods)
-forecast_index = pd.date_range(start=data.index[-1], periods=n_periods + 1, freq="M")[
-    1:
-]
+forecast_index = pd.date_range(start=data.index[-1], periods=n_periods + 1, freq="M")[1:]
 forecast_series = pd.Series(forecast, index=forecast_index)
 
 # Initialize slider state if not set
@@ -165,19 +168,3 @@ elif selected_page == "Forecast Table":
         file_name="forecast_data.csv",
         mime="text/csv",
     )
-
-elif selected_page == "Download Model":
-    st.write("### Download the Trained ARIMA Model")
-
-    # Ensure the model file exists before offering it for download
-    model_filename = "arima_model.pkl"
-    if os.path.exists(model_filename):
-        with open(model_filename, "rb") as model_file:
-            st.download_button(
-                label="Download ARIMA Model",
-                data=model_file,
-                file_name=model_filename,
-                mime="application/octet-stream",
-            )
-    else:
-        st.error("No model found. Please train the model first.")
