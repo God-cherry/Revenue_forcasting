@@ -1,2 +1,11 @@
+matplotlib
 numpy==1.26.0
 pandas==2.1.1
+scipy
+statsmodels
+setuptools==68.0.0
+urllib3
+Cython
+joblib
+pmdarima
+streamlit_option_menu
