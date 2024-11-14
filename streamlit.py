@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pmdarima import auto_arima
 from streamlit_option_menu import option_menu
+import pickle
 
 # Apply a consistent plot style
 plt.style.use("ggplot")
@@ -48,26 +49,36 @@ data.index = data.index + pd.offsets.MonthEnd(-1)  # Adjust to month-end
 data = data[~data.index.duplicated(keep="first")]  # Remove duplicates
 data[" Revenue "] = data[" Revenue "].fillna(method="ffill")  # Fill missing values
 
-# Forecast parameters and model training (cached to run only once)
+# Forecast parameters
 n_periods = 60  # 5 years = 60 months
 
+# Load the pickled ARIMA model if it exists, otherwise train a new one
 if "model" not in st.session_state:
-    with st.spinner("Training ARIMA model..."):
-        st.session_state.model = auto_arima(
-            data[" Revenue "],
-            seasonal=True,
-            m=12,
-            trace=False,
-            stepwise=True,
-        )
-    st.success("Model trained successfully!")
+    model_file = 'trained_arima_model.pkl'  # Path to your pickled ARIMA model
+    
+    try:
+        with open(model_file, 'rb') as f:
+            st.session_state.model = pickle.load(f)
+        st.success("Model loaded successfully from pickle!")
+    except FileNotFoundError:
+        st.warning("Pickle file not found, training the model...")
+        with st.spinner("Training ARIMA model..."):
+            st.session_state.model = auto_arima(
+                data[" Revenue "],
+                seasonal=True,
+                m=12,
+                trace=False,
+                stepwise=True,
+            )
+        # Save the trained model to a pickle file for future use
+        with open(model_file, 'wb') as f:
+            pickle.dump(st.session_state.model, f)
+        st.success("Model trained and pickled successfully!")
 
-# Forecasting
+# Forecasting using the loaded model
 model = st.session_state.model
 forecast = model.predict(n_periods=n_periods)
-forecast_index = pd.date_range(start=data.index[-1], periods=n_periods + 1, freq="M")[
-    1:
-]
+forecast_index = pd.date_range(start=data.index[-1], periods=n_periods + 1, freq="M")[1:]
 forecast_series = pd.Series(forecast, index=forecast_index)
 
 # Initialize slider state if not set
@@ -113,7 +124,7 @@ elif selected_page == "Predicted Data":
     )
     ax.set_title(f"Combined Forecast (1972 - {selected_years[1]})", fontsize=16)
     ax.set_xlabel("Year", fontsize=14)
-    ax.set_ylabel("Revenue (M$)", fontsize=14)
+    ax.set_ylabel("Revenue ($)", fontsize=14)
     ax.legend()
     st.pyplot(fig)
 
@@ -124,8 +135,8 @@ elif selected_page == "Predicted Data":
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(year_forecast, label=f"Forecasted Revenue for {year}", color="blue")
         ax.set_title(f"Forecasted Revenue - {year}", fontsize=14)
-        ax.set_xlabel("Month-Year", fontsize=12)
-        ax.set_ylabel("Revenue (M$)", fontsize=12)
+        ax.set_xlabel("Date", fontsize=12)
+        ax.set_ylabel("Revenue ($)", fontsize=12)
         ax.legend()
         st.pyplot(fig)
 
