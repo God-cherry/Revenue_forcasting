@@ -3,8 +3,8 @@ numpy==1.23.5
 pandas
 scipy
 statsmodels
+setuptools==68.0.0
 urllib3
-setuptools
 Cython
 joblib
 pmdarima
