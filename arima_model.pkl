@@ -3,7 +3,7 @@ from pmdarima import auto_arima
 import pickle
 
 # Load and prepare the data
-data = pd.read_csv(r"C:\Users\charankumarmv\Downloads\dataset.csv")
+data = pd.read_csv("dataset.csv")
 
 # Validate and clean the dataset
 if "Month" not in data.columns:
