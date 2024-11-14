@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from pmdarima import auto_arima
 from streamlit_option_menu import option_menu
 import pickle
+import os
 
 # Apply a consistent plot style
 plt.style.use("ggplot")
@@ -16,8 +17,8 @@ st.write("#### Predict revenue trends for the next five years using ARIMA modeli
 with st.sidebar:
     selected_page = option_menu(
         menu_title="Navigation",
-        options=["Welcome", "Predicted Data", "Forecast Table"],
-        icons=["house", "graph-up-arrow", "table"],
+        options=["Welcome", "Predicted Data", "Forecast Table", "Download Model"],
+        icons=["house", "graph-up-arrow", "table", "download"],
         menu_icon="menu-app",
         default_index=0,
     )
@@ -52,30 +53,28 @@ data[" Revenue "] = data[" Revenue "].fillna(method="ffill")  # Fill missing val
 # Forecast parameters
 n_periods = 60  # 5 years = 60 months
 
-# Load the pickled ARIMA model if it exists, otherwise train a new one
-if "model" not in st.session_state:
-    model_file = 'trained_arima_model.pkl'  # Path to your pickled ARIMA model
-    
-    try:
-        with open(model_file, 'rb') as f:
-            st.session_state.model = pickle.load(f)
-        st.success("Model loaded successfully from pickle!")
-    except FileNotFoundError:
-        st.warning("Pickle file not found, training the model...")
-        with st.spinner("Training ARIMA model..."):
-            st.session_state.model = auto_arima(
-                data[" Revenue "],
-                seasonal=True,
-                m=12,
-                trace=False,
-                stepwise=True,
-            )
-        # Save the trained model to a pickle file for future use
-        with open(model_file, 'wb') as f:
-            pickle.dump(st.session_state.model, f)
-        st.success("Model trained and pickled successfully!")
+# Load the model from pickle file if it exists, otherwise train and save it
+model_filename = "arima_model.pkl"
 
-# Forecasting using the loaded model
+if os.path.exists(model_filename):
+    with open(model_filename, "rb") as model_file:
+        st.session_state.model = pickle.load(model_file)
+    st.success("Model loaded from pickle file!")
+else:
+    with st.spinner("Training ARIMA model..."):
+        st.session_state.model = auto_arima(
+            data[" Revenue "],
+            seasonal=True,
+            m=12,
+            trace=False,
+            stepwise=True,
+        )
+        # Save the trained model to a pickle file
+        with open(model_filename, "wb") as model_file:
+            pickle.dump(st.session_state.model, model_file)
+    st.success("Model trained and saved successfully!")
+
+# Forecasting
 model = st.session_state.model
 forecast = model.predict(n_periods=n_periods)
 forecast_index = pd.date_range(start=data.index[-1], periods=n_periods + 1, freq="M")[1:]
@@ -167,3 +166,18 @@ elif selected_page == "Forecast Table":
         file_name="forecast_data.csv",
         mime="text/csv",
     )
+
+elif selected_page == "Download Model":
+    st.write("### Download the Trained ARIMA Model")
+
+    # Ensure the model file exists before offering it for download
+    if os.path.exists(model_filename):
+        with open(model_filename, "rb") as model_file:
+            st.download_button(
+                label="Download ARIMA Model",
+                data=model_file,
+                file_name=model_filename,
+                mime="application/octet-stream",
+            )
+    else:
+        st.error("No model found. Please train the model first.")
