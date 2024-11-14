@@ -125,7 +125,7 @@ elif selected_page == "Predicted Data":
     )
     ax.set_title(f"Combined Forecast (1972 - {selected_years[1]})", fontsize=16)
     ax.set_xlabel("Year", fontsize=14)
-    ax.set_ylabel("Revenue ($)", fontsize=14)
+    ax.set_ylabel("Revenue ($M)", fontsize=14)
     ax.legend()
     st.pyplot(fig)
 
@@ -136,8 +136,8 @@ elif selected_page == "Predicted Data":
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(year_forecast, label=f"Forecasted Revenue for {year}", color="blue")
         ax.set_title(f"Forecasted Revenue - {year}", fontsize=14)
-        ax.set_xlabel("Date", fontsize=12)
-        ax.set_ylabel("Revenue ($)", fontsize=12)
+        ax.set_xlabel("Year-Month", fontsize=12)
+        ax.set_ylabel("Revenue ($M)", fontsize=12)
         ax.legend()
         st.pyplot(fig)
 
