@@ -1,5 +1,5 @@
 matplotlib
-numpy==1.23.5
+numpy==1.16
 pandas
 scipy
 statsmodels
@@ -7,5 +7,5 @@ urllib3
 setuptools
 Cython
 joblib
-pmdarima==2.0.3
+pmdarima
 streamlit_option_menu
