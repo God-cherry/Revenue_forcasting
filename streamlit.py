@@ -5,6 +5,7 @@ from pmdarima import auto_arima
 from streamlit_option_menu import option_menu
 import joblib
 import os
+import hashlib
 
 # Apply a consistent plot style
 plt.style.use("ggplot")
@@ -12,6 +13,36 @@ plt.style.use("ggplot")
 # App title and main header styling
 st.title("📈 5-Year Revenue Forecasting App")
 st.write("#### Predict revenue trends for the next five years using ARIMA modeling.")
+
+# Function to hash the password
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+# Define the salted password
+SALT = "RevenueIs@1234"
+VALID_USER = "Customer01"
+VALID_PASSWORD_HASH = hash_password(SALT)
+
+# Session state for authentication
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+# Login Page
+if not st.session_state.authenticated:
+    st.subheader("🔐 Login")
+
+    username = st.text_input("Username", placeholder="Enter your username")
+    password = st.text_input("Password", type="password", placeholder="Enter your password")
+    login_button = st.button("Login")
+
+    if login_button:
+        if username == VALID_USER and hash_password(password) == VALID_PASSWORD_HASH:
+            st.session_state.authenticated = True
+            st.success("Login successful! Welcome to the Revenue Forecasting App.")
+        else:
+            st.error("Invalid username or password. Please try again.")
+
+    st.stop()
 
 # Sidebar navigation with icons and customized appearance
 with st.sidebar:
