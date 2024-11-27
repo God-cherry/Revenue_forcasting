@@ -5,7 +5,7 @@ from pmdarima import auto_arima
 from streamlit_option_menu import option_menu
 import joblib
 import os
-import hashlib
+import hashlib  # For password hashing
 
 # Apply a consistent plot style
 plt.style.use("ggplot")
@@ -14,45 +14,42 @@ plt.style.use("ggplot")
 st.title("📈 5-Year Revenue Forecasting App")
 st.write("#### Predict revenue trends for the next five years using ARIMA modeling.")
 
-# Function to hash the password
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-# Define the salted password
-SALT = "RevenueIs@1234"
-VALID_USER = "Customer01"
-VALID_PASSWORD_HASH = hash_password(SALT)
-
-# Session state for authentication
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-# Login Page
-if not st.session_state.authenticated:
-    st.subheader("🔐 Login")
-
-    username = st.text_input("Username", placeholder="Enter your username")
-    password = st.text_input("Password", type="password", placeholder="Enter your password")
-    login_button = st.button("Login")
-
-    if login_button:
-        if username == VALID_USER and hash_password(password) == VALID_PASSWORD_HASH:
-            st.session_state.authenticated = True
-            st.success("Login successful! Welcome to the Revenue Forecasting App.")
-        else:
-            st.error("Invalid username or password. Please try again.")
-
-    st.stop()
-
 # Sidebar navigation with icons and customized appearance
 with st.sidebar:
     selected_page = option_menu(
         menu_title="Navigation",
-        options=["Welcome", "Predicted Data", "Forecast Table"],
-        icons=["house", "graph-up-arrow", "table"],
+        options=["Login", "Welcome", "Predicted Data", "Forecast Table"],
+        icons=["key", "house", "graph-up-arrow", "table"],
         menu_icon="menu-app",
         default_index=0,
     )
+
+# Define login credentials
+USERNAME = "Customer01"
+SALT = "RevenueIs@1234"
+
+# Create a hash of the salted password
+def hash_password(password):
+    salted_password = password + SALT
+    return hashlib.sha256(salted_password.encode()).hexdigest()
+
+# Login functionality
+if selected_page == "Login":
+    st.write("## Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if username == USERNAME and hash_password(password) == hash_password(SALT):
+            st.session_state.logged_in = True
+            st.success("Login successful! Navigate to other pages using the sidebar.")
+        else:
+            st.error("Invalid username or password.")
+
+# Check login status
+if not st.session_state.get("logged_in", False) and selected_page != "Login":
+    st.warning("Please log in to access the application.")
+    st.stop()
 
 # Load and prepare the data
 data = pd.read_csv("dataset.csv")
