@@ -9,3 +9,4 @@ Cython
 joblib
 pmdarima
 streamlit_option_menu
+hashlib
