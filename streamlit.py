@@ -1,28 +1,27 @@
 import streamlit as st
 import pandas as pd
-import hashlib
+import bcrypt
 import os
 from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
 from pmdarima import auto_arima
 import joblib
 
-# Apply a consistent plot style
 plt.style.use("ggplot")
-
-# App title and main header styling
 st.title("📈 5-Year Revenue Forecasting App")
 st.write("#### Predict revenue trends for the next five years using ARIMA modeling.")
 
 # Function to hash passwords
 def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
 # Function to validate user credentials
 def validate_user(username, password, users_df):
-    password_hash = hash_password(password)
-    user = users_df[(users_df['username'] == username) & (users_df['password_hash'] == password_hash)]
-    return not user.empty
+    user = users_df[users_df['username'] == username]
+    if not user.empty:
+        stored_hash = user.iloc[0]['password_hash']
+        return bcrypt.checkpw(password.encode(), stored_hash.encode())
+    return False
 
 # Load the CSV file with user credentials
 credentials_file = "users.csv"
