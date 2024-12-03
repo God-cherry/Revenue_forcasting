@@ -1,4 +1,5 @@
 matplotlib
+bcrypt==4.0.1
 numpy==1.26.0
 pandas==2.1.1
 scipy
@@ -9,4 +10,4 @@ Cython
 joblib
 pmdarima
 streamlit_option_menu
-brcypt
+
