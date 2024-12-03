@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
+import hashlib
+import os
+from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
 from pmdarima import auto_arima
-from streamlit_option_menu import option_menu
 import joblib
-import os
-import hashlib
 
 # Apply a consistent plot style
 plt.style.use("ggplot")
@@ -14,14 +14,23 @@ plt.style.use("ggplot")
 st.title("📈 5-Year Revenue Forecasting App")
 st.write("#### Predict revenue trends for the next five years using ARIMA modeling.")
 
-# Function to hash the password
+# Function to hash passwords
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-# Define the salted password
-SALT = "RevenueIs@1234"
-VALID_USER = "Customer01"
-VALID_PASSWORD_HASH = hash_password(SALT)
+# Function to validate user credentials
+def validate_user(username, password, users_df):
+    password_hash = hash_password(password)
+    user = users_df[(users_df['username'] == username) & (users_df['password_hash'] == password_hash)]
+    return not user.empty
+
+# Load the CSV file with user credentials
+credentials_file = "users.csv"
+if not os.path.exists(credentials_file):
+    st.error("User credentials file not found. Please create 'users.csv' with hashed login credentials.")
+    st.stop()
+
+users_df = pd.read_csv(credentials_file)
 
 # Session state for authentication
 if "authenticated" not in st.session_state:
@@ -36,7 +45,7 @@ if not st.session_state.authenticated:
     login_button = st.button("Login")
 
     if login_button:
-        if username == VALID_USER and hash_password(password) == VALID_PASSWORD_HASH:
+        if validate_user(username, password, users_df):
             st.session_state.authenticated = True
             st.success("Login successful! Welcome to the Revenue Forecasting App.")
         else:
