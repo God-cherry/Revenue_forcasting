@@ -2,4 +2,4 @@
 
 To access my app use the below url:-
 
-https://revenueforcasting-app-charan-ramaswamy.streamlit.app/
+https://revenueforecasting-app-charan-ramaswamy.streamlit.app/
